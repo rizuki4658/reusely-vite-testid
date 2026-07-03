@@ -1,0 +1,46 @@
+{
+  "name": "@reusely/vue-testid",
+  "version": "0.1.0",
+  "description": "Auto-inject data-testid attributes into Vue components at compile time for e2e testing",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "config/",
+    "core/",
+    "adapters/"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "vite": ">=4.0.0",
+    "@vue/compiler-dom": ">=3.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "vite": "^5.0.0",
+    "@vue/compiler-dom": "^3.4.0"
+  },
+  "keywords": [
+    "vue",
+    "vite",
+    "vite-plugin",
+    "testid",
+    "data-testid",
+    "e2e",
+    "testing",
+    "qa",
+    "selector",
+    "automation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reusely/reusely-vue-testid.git"
+  }
+}
