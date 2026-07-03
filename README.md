@@ -23,7 +23,7 @@ Format: `{namespace}--{identifier}`
 ## Install
 
 ```bash
-npm install @reusely/vue-testid --save-dev
+npm install reusely-vite-testid --save-dev
 ```
 
 ## Setup

@@ -6,7 +6,7 @@ export function createTestIdPlugin(options = {}) {
 
   // Mutable context — updated by Vite plugin configResolved
   const context = {
-    projectRoot: process.cwd(),
+    projectRoot: options.projectRoot || process.cwd(),
   }
 
   // Layer 1: nodeTransform
