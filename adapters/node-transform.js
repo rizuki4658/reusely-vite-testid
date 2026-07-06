@@ -1,13 +1,13 @@
-import { resolveNamespace } from '../core/namespace-resolver.js'
-import { resolveIdentifier } from '../core/identifier-strategy.js'
-import { buildAttributes } from '../core/attribute-builder.js'
-import { injectAttributes } from './attribute-injector.js'
+const { resolveNamespace } = require('../core/namespace-resolver.js')
+const { resolveIdentifier } = require('../core/identifier-strategy.js')
+const { buildAttributes } = require('../core/attribute-builder.js')
+const { injectAttributes } = require('./attribute-injector.js')
 
-export function createNodeTransform(config, projectRoot) {
+function createNodeTransform(config, projectRoot) {
   return createNodeTransformWithContext(config, { projectRoot })
 }
 
-export function createNodeTransformWithContext(config, context) {
+function createNodeTransformWithContext(config, context) {
   let cachedFilename = null
   let cachedNamespace = null
   let usedIdentifiers = new Set()
@@ -157,3 +157,5 @@ function isExcludedComponent(tag, config) {
   if (config.filter.excludeComponents.has(tag)) return true
   return config.filter.excludeComponentPatterns.some(p => p.test(tag))
 }
+
+module.exports = { createNodeTransform, createNodeTransformWithContext }

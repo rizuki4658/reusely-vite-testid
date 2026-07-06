@@ -1,5 +1,5 @@
-import { INTERACTIVE_TAGS, STRUCTURAL_TAGS, TAG_TYPES } from './constants.js'
-import { stableHash } from './hash.js'
+const { INTERACTIVE_TAGS, STRUCTURAL_TAGS, TAG_TYPES } = require('./constants.js')
+const { stableHash } = require('./hash.js')
 
 /**
  * Resolve semantic identifier from element attributes/directives.
@@ -29,7 +29,7 @@ import { stableHash } from './hash.js'
  *   source: which priority resolved it, e.g. "v-model"
  *   null: skip injection for this node
  */
-export function resolveIdentifier(nodeData, config) {
+function resolveIdentifier(nodeData, config) {
   const { tag, tagType, attrs, directives, staticText, attrKeys } = nodeData
 
   // --- Skip conditions ---
@@ -225,3 +225,5 @@ function toKebabCase(str) {
     .replace(/[\s_]+/g, '-')
     .toLowerCase()
 }
+
+module.exports = { resolveIdentifier }

@@ -1,5 +1,5 @@
-import { DEFAULT_CONFIG } from './schema.js'
-import { DEFAULT_TAG_SUFFIX_MAP, DEFAULT_EVENT_TAG_SUFFIX_MAP } from '../core/constants.js'
+const { DEFAULT_CONFIG } = require('./schema.js')
+const { DEFAULT_TAG_SUFFIX_MAP, DEFAULT_EVENT_TAG_SUFFIX_MAP } = require('../core/constants.js')
 
 function deepMerge(target, source) {
   const result = { ...target }
@@ -19,7 +19,7 @@ function deepMerge(target, source) {
   return result
 }
 
-export function resolveConfig(userOptions = {}) {
+function resolveConfig(userOptions = {}) {
   const config = deepMerge(DEFAULT_CONFIG, userOptions)
 
   if (!config.namespace.separator) {
@@ -54,3 +54,5 @@ export function resolveConfig(userOptions = {}) {
 
   return Object.freeze(config)
 }
+
+module.exports = { resolveConfig }

@@ -23,7 +23,7 @@ function fnv1a32(str) {
  * @param {string[]} attrKeys - Sorted static attribute keys
  * @returns {string} 4-char base36 hash, e.g. "a3f2"
  */
-export function stableHash(tag, staticText, attrKeys) {
+function stableHash(tag, staticText, attrKeys) {
   const input = [
     tag,
     staticText.slice(0, 50),
@@ -33,3 +33,5 @@ export function stableHash(tag, staticText, attrKeys) {
   const hash = fnv1a32(input)
   return hash.toString(36).slice(0, 4).padStart(4, '0')
 }
+
+module.exports = { stableHash }

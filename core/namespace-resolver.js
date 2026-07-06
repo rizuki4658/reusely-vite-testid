@@ -62,7 +62,7 @@ function deduplicateSegments(segments) {
 }
 
 
-export function resolveNamespace(filename, projectRoot, config) {
+function resolveNamespace(filename, projectRoot, config) {
   const { stripPaths, stripLayers, maxSegments, mappings, libraryPrefixes } = config.namespace
 
   // Normalize path (OS-agnostic, case preserved)
@@ -126,3 +126,5 @@ export function resolveNamespace(filename, projectRoot, config) {
 
   return segments.join('-')
 }
+
+module.exports = { resolveNamespace }

@@ -1,4 +1,4 @@
-export const DEFAULT_CONFIG = {
+const DEFAULT_CONFIG = {
   enabled: true,
 
   attributes: {
@@ -55,3 +55,5 @@ export const DEFAULT_CONFIG = {
     paths: [],
   },
 }
+
+module.exports = { DEFAULT_CONFIG }

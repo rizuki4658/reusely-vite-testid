@@ -19,7 +19,7 @@ function resolveAttributeValue(key, context) {
   }
 }
 
-export function buildAttributes(namespace, identifier, tagName, config) {
+function buildAttributes(namespace, identifier, tagName, config) {
   const { separator, prefix } = config.namespace
   const attrs = []
 
@@ -37,3 +37,5 @@ export function buildAttributes(namespace, identifier, tagName, config) {
 
   return attrs
 }
+
+module.exports = { buildAttributes }

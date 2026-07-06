@@ -4,7 +4,7 @@ const SYNTHETIC_LOC = {
   end: { line: 1, column: 1, offset: 0 }
 }
 
-export function injectAttributes(node, attributes) {
+function injectAttributes(node, attributes) {
   for (const attr of attributes) {
     node.props.push({
       type: 6, // NodeTypes.ATTRIBUTE
@@ -18,3 +18,5 @@ export function injectAttributes(node, attributes) {
     })
   }
 }
+
+module.exports = { injectAttributes }

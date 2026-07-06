@@ -1,7 +1,7 @@
-import { resolveConfig } from './config/resolve.js'
-import { createNodeTransformWithContext } from './adapters/node-transform.js'
+const { resolveConfig } = require('./config/resolve.js')
+const { createNodeTransformWithContext } = require('./adapters/node-transform.js')
 
-export function createTestIdPlugin(options = {}) {
+function createTestIdPlugin(options = {}) {
   const config = resolveConfig(options)
 
   // Mutable context — updated by Vite plugin configResolved
@@ -32,3 +32,5 @@ export function createTestIdPlugin(options = {}) {
 
   return { plugin, nodeTransform }
 }
+
+module.exports = { createTestIdPlugin }
