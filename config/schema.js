@@ -48,6 +48,7 @@ const DEFAULT_CONFIG = {
     skipPatterns: [],
     excludeComponents: [],         // component names to skip (e.g. ['RouterLink'])
     excludeComponentPatterns: [],  // regex patterns to skip (e.g. [/^Icon/])
+    componentMode: 'interactive',  // 'all' = inject on all components, 'interactive' = only with v-model/events/id/name/aria-label
   },
 
   renderFn: {

@@ -112,11 +112,19 @@ function resolveIdentifier(nodeData, config) {
   }
 
   // --- Priority 8: Component tag name ---
+  // In 'interactive' mode, only inject on components that resolved via
+  // priorities 2-6 (semantic attrs). If we reach here, the component has
+  // no semantic info — skip it to avoid Vue fragment warnings.
   if (isComponent) {
-    return {
-      identifier: toKebabCase(tag),
-      source: 'component-tag'
+    const mode = config.filter.componentMode || 'interactive'
+    if (mode === 'all') {
+      return {
+        identifier: toKebabCase(tag),
+        source: 'component-tag'
+      }
     }
+    // 'interactive' or 'none' — skip components without semantic attributes
+    return null
   }
 
   // --- Priority 9: Slot context modifier ---

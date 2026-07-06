@@ -1,10 +1,13 @@
-# @reusely/vue-testid
+# reusely-vite-testid
 
 Auto-inject `data-testid` attributes into Vue components at compile time. No manual annotation needed — your QA team gets stable selectors for e2e testing out of the box.
 
 ## How it works
 
-The plugin hooks into Vue's template compiler via `nodeTransforms`. During compilation, it analyzes each element's attributes, directives, and context to generate a semantic `data-testid` automatically.
+The plugin has two layers:
+
+1. **Template transform** — hooks into Vue's `nodeTransforms` to inject `data-testid` on elements in `<template>` blocks
+2. **Render function transform** — parses `h()` calls in `<script>` blocks and injects `data-testid` into props objects
 
 ```
 src/components/Auth/LoginForm.vue
@@ -32,7 +35,7 @@ npm install reusely-vite-testid --save-dev
 
 ```js
 // vite.config.js
-import { createTestIdPlugin } from '@reusely/vue-testid'
+import { createTestIdPlugin } from 'reusely-vite-testid'
 
 const { plugin, nodeTransform } = createTestIdPlugin({
   enabled: process.env.NODE_ENV !== 'production',
@@ -56,7 +59,7 @@ export default defineConfig({
 
 ```js
 // vitest.config.js
-import { createTestIdPlugin } from '@reusely/vue-testid'
+import { createTestIdPlugin } from 'reusely-vite-testid'
 
 const { plugin, nodeTransform } = createTestIdPlugin({ enabled: true })
 
@@ -87,9 +90,88 @@ The plugin resolves identifiers in this order. First match wins:
 | 5 | `aria-label` | `aria-label="Search"` | `search` |
 | 6 | Event handler | `@click="handleSave"` | `save-btn` |
 | 7 | `type` attribute | `<input type="email">` | `email-input` |
-| 8 | Component tag | `<DatePicker />` | `date-picker` |
+| 8 | Component tag | `<DatePicker />` | `date-picker` (only in `componentMode: 'all'`) |
 | 9 | `placeholder` | `placeholder="Search..."` | `search` |
 | 10 | Hash fallback | (no semantic info) | `div-a3f2` |
+
+## Component Mode
+
+Controls when `data-testid` is injected on Vue components (custom elements like `<DatePicker />`, `<Tooltip />`, etc.).
+
+| Mode | Behavior |
+|------|----------|
+| `'interactive'` (default) | Only inject on components that resolved via semantic priorities 2-6 (id, name, v-model, aria-label, event handler). Components with no semantic info are skipped — this avoids Vue fragment warnings. |
+| `'all'` | Inject on all components, including those without semantic attributes. Uses kebab-cased tag name as fallback (priority 8). Recommended when combined with `excludeComponents` for known fragment components. |
+
+```js
+createTestIdPlugin({
+  filter: {
+    componentMode: 'all',
+    excludeComponents: [
+      'RouterView', 'TransitionGroup', 'Transition',
+    ],
+  },
+})
+```
+
+**Why this matters:** Vue 3 components that render fragment or text root nodes cannot inherit non-prop attributes like `data-testid`. Injecting on these components produces console warnings. Use `excludeComponents` to skip them when using `componentMode: 'all'`.
+
+## Render Function Transform
+
+For components that use `h()` render functions instead of `<template>`, the plugin provides a Vite `transform` hook that parses `h()` calls and injects `data-testid` into props.
+
+### Setup
+
+```js
+createTestIdPlugin({
+  renderFn: {
+    enabled: true,
+    paths: ['system-design/src/components/'],
+  },
+})
+```
+
+### How it works
+
+The transform finds `h()` calls with string-literal tags and extracts semantic info from the props object:
+
+```js
+// Before
+h('input', { type: 'checkbox', onInput: this.changeValue })
+
+// After
+h('input', { 'data-testid': 'bbui-checkbox--checkbox-input', type: 'checkbox', onInput: this.changeValue })
+```
+
+### What gets processed
+
+- `h('div', { onClick: this.handleToggle })` — structural element with event handler
+- `h('input', { type: 'email' })` — interactive element
+- `h('button', { onClick: this.handleSave })` — interactive element with event
+
+### What gets skipped
+
+- `h(MyComponent)` — component references (not string literal)
+- `h(cond ? A : B, ...)` — dynamic/conditional tags
+- `h('span', ...)` — tags in `skipTags`
+- `h('div', { class: 'wrapper' })` — structural element without events
+- `h()` calls with existing `data-testid` in props
+
+### Extractable props
+
+Only **string-literal** values and **method references** can be extracted at compile time:
+
+| Pattern | Extracted |
+|---------|-----------|
+| `type: 'checkbox'` | `attrs.type = 'checkbox'` |
+| `name: 'email'` | `attrs.name = 'email'` |
+| `id: 'my-field'` | `attrs.id = 'my-field'` |
+| `placeholder: 'Search'` | `attrs.placeholder = 'Search'` |
+| `onClick: this.handleSave` | `events.click = 'handleSave'` |
+| `onInput: this.changeValue` | `events.input = 'changeValue'` |
+| `name: this.$props.name` | skipped (dynamic) |
+| `type: type \|\| 'text'` | skipped (expression) |
+| `onClick: (e) => emit()` | skipped (arrow function) |
 
 ## Configuration
 
@@ -128,19 +210,72 @@ createTestIdPlugin({
   },
 
   filter: {
+    componentMode: 'interactive', // 'interactive' | 'all'
     skipTags: [                // HTML tags to never inject on
       'span', 'br', 'hr', 'img', 'svg', 'path',
       'template', 'slot', 'transition', 'keep-alive',
       'teleport',
     ],
     skipPatterns: [],          // regex patterns to skip (e.g. [/^Icon/])
-    excludeComponents: [],     // component names to skip
-    excludeComponentPatterns: [],
+    excludeComponents: [],     // component names to skip (supports PascalCase and kebab-case)
+    excludeComponentPatterns: [],  // regex patterns to skip components
+  },
+
+  // Render function transform (for h() calls)
+  renderFn: {
+    enabled: false,            // enable render function transform
+    paths: [],                 // file path prefixes to process (e.g. ['system-design/src/'])
   },
 })
 ```
 
 ## Recipes
+
+### Full setup with render function support
+
+```js
+createTestIdPlugin({
+  enabled: true,
+  namespace: {
+    stripPaths: [
+      'src/components/',
+      'src/views/',
+      'system-design/src/components/',
+    ],
+    stripLayers: ['Features'],
+    libraryPrefixes: [
+      { path: 'system-design/src/components/', prefix: 'bbui' },
+    ],
+  },
+  filter: {
+    componentMode: 'all',
+    excludeComponents: [
+      'RouterView', 'RouterLink',
+      'TransitionGroup', 'Transition',
+    ],
+    excludeComponentPatterns: [/^Icon/],
+  },
+  renderFn: {
+    enabled: true,
+    paths: ['system-design/src/components/'],
+  },
+})
+```
+
+### Skip specific components
+
+Component names are matched in both PascalCase and kebab-case:
+
+```js
+createTestIdPlugin({
+  filter: {
+    excludeComponents: [
+      'RouterView',      // matches <RouterView> and <router-view>
+      'TransitionGroup', // matches <TransitionGroup> and <transition-group>
+    ],
+  },
+})
+```
 
 ### Skip Icon components
 
@@ -161,7 +296,6 @@ createTestIdPlugin({
   namespace: {
     stripPaths: [
       'src/components/',
-      'src/views/',
       'packages/ui/src/components/',
     ],
     libraryPrefixes: [
@@ -175,8 +309,6 @@ This turns `packages/ui/src/components/Button.vue` → `ui-button`.
 
 ### Custom tag suffixes
 
-Add suffixes for your UI library's custom components:
-
 ```js
 createTestIdPlugin({
   identifier: {
@@ -185,23 +317,6 @@ createTestIdPlugin({
       'datepickerpanel': '-picker',
       'combobox': '-select',
     },
-  },
-})
-```
-
-### Skip specific tags
-
-```js
-createTestIdPlugin({
-  filter: {
-    skipTags: [
-      // defaults
-      'span', 'br', 'hr', 'img', 'svg', 'path',
-      'template', 'slot', 'transition', 'keep-alive',
-      'teleport',
-      // custom
-      'lottie-player',
-    ],
   },
 })
 ```

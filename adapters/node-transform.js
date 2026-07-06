@@ -152,10 +152,39 @@ function extractNodeData(node) {
 /**
  * Check if a component tag is excluded from testid injection.
  * Matches against exact names (Set) and regex patterns.
+ * Handles kebab-case ↔ PascalCase normalization so that
+ * `<transition-group>` matches `'TransitionGroup'` in excludeComponents.
  */
 function isExcludedComponent(tag, config) {
+  // Try exact match first
   if (config.filter.excludeComponents.has(tag)) return true
-  return config.filter.excludeComponentPatterns.some(p => p.test(tag))
+
+  // Try PascalCase version of the tag (for kebab-case tags like 'transition-group')
+  const pascal = toPascalCase(tag)
+  if (pascal !== tag && config.filter.excludeComponents.has(pascal)) return true
+
+  // Try kebab-case version of the tag (for PascalCase tags like 'TransitionGroup')
+  const kebab = toKebab(tag)
+  if (kebab !== tag && config.filter.excludeComponents.has(kebab)) return true
+
+  // Check regex patterns against all forms
+  return config.filter.excludeComponentPatterns.some(p =>
+    p.test(tag) || p.test(pascal) || p.test(kebab)
+  )
+}
+
+function toPascalCase(str) {
+  return str
+    .split('-')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('')
+}
+
+function toKebab(str) {
+  return str
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase()
 }
 
 module.exports = { createNodeTransform, createNodeTransformWithContext }

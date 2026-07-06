@@ -1,5 +1,6 @@
 const { resolveConfig } = require('./config/resolve.js')
 const { createNodeTransformWithContext } = require('./adapters/node-transform.js')
+const { createRenderFnTransform } = require('./adapters/render-fn-transform.js')
 
 function createTestIdPlugin(options = {}) {
   const config = resolveConfig(options)
@@ -9,12 +10,16 @@ function createTestIdPlugin(options = {}) {
     projectRoot: options.projectRoot || process.cwd(),
   }
 
-  // Layer 1: nodeTransform
+  // Layer 1: nodeTransform (template compilation)
   const nodeTransform = config.enabled
     ? createNodeTransformWithContext(config, context)
     : () => {} // no-op if disabled
 
-  // Layer 2: Vite plugin (for render function components — stub for now)
+  // Layer 2: render function transform (h() calls)
+  const renderFnTransform = config.enabled && config.renderFn.enabled
+    ? createRenderFnTransform(config, context)
+    : null
+
   const plugin = {
     name: 'reusely-vue-testid',
     enforce: 'pre',
@@ -23,10 +28,9 @@ function createTestIdPlugin(options = {}) {
       context.projectRoot = resolvedConfig.root
     },
 
-    // Layer 2 transform — currently no-op
     transform(code, id) {
-      if (!config.enabled || !config.renderFn.enabled) return null
-      return null
+      if (!renderFnTransform) return null
+      return renderFnTransform(code, id)
     },
   }
 

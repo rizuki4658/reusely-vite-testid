@@ -130,11 +130,20 @@ describe('resolveIdentifier', () => {
   })
 
   describe('priority 8: component tag name', () => {
-    it('returns kebab-cased component name', () => {
+    it('skips component without semantic attrs in interactive mode (default)', () => {
       const result = resolveIdentifier(makeNode({
         tag: 'DatePicker',
         tagType: 1,
       }), config)
+      expect(result).toBeNull()
+    })
+
+    it('returns kebab-cased component name in all mode', () => {
+      const c = resolveConfig({ filter: { componentMode: 'all' } })
+      const result = resolveIdentifier(makeNode({
+        tag: 'DatePicker',
+        tagType: 1,
+      }), c)
       expect(result).toEqual({ identifier: 'date-picker', source: 'component-tag' })
     })
   })
@@ -152,13 +161,12 @@ describe('resolveIdentifier', () => {
   })
 
   describe('priority 11: hash fallback', () => {
-    it('returns hash for component with no semantic info', () => {
+    it('skips component with no semantic info in interactive mode', () => {
       const result = resolveIdentifier(makeNode({
         tag: 'CustomWidget',
         tagType: 1,
       }), config)
-      // priority 8 (component-tag) should match first
-      expect(result).toEqual({ identifier: 'custom-widget', source: 'component-tag' })
+      expect(result).toBeNull()
     })
 
     it('returns hash for interactive element with no attributes', () => {
