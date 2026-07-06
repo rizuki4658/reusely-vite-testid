@@ -1,6 +1,6 @@
 {
   "name": "reusely-vite-testid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auto-inject data-testid attributes into Vue components at compile time for e2e testing",
   "main": "index.js",
   "files": [
